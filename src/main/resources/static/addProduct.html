@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title></title>
+        <link rel="stylesheet" href="https://kendo.cdn.telerik.com/2021.3.1207/styles/kendo.common.min.css" />
+        <link rel="stylesheet" href="https://kendo.cdn.telerik.com/2021.3.1207/styles/kendo.blueopal.min.css" />
+        <script src="https://kendo.cdn.telerik.com/2021.3.1207/js/jquery.min.js"></script>  
+        <script src="https://kendo.cdn.telerik.com/2021.3.1109/js/jquery.min.js"></script>
+        <script src="https://kendo.cdn.telerik.com/2021.3.1109/js/kendo.web.min.js"></script>
+        <script src="https://kendo.cdn.telerik.com/2021.3.1109/js/kendo.all.min.js"></script>
+        <style>
+           
+            #grid{
+                text-align: center;
+                background-color: lightblue;
+                margin-top: 20px;
+            }
+        </style>
+    </head>
+    <body>
+        
+        
+        <br>
+        <br>
+        <div class="col-sm-4 mt-2" style="display:flex; justify-content: center;">
+            <input type="button" value="Hide Records" class="btn btn-secondary mt-2" id="buttonToggleRecords" onclick="toggleFunction()"/>
+        </div>
+        <br>
+        <br>    
+        <div id="grid"></div>
+        <script>
+        $(document).ready(function(){
+        	var preventCloseOnSave = false;
+        	  $("#buttonToggleRecords").kendoButton();
+        	  
+        	   $.ajax({ 
+        		   type: "GET",
+        		   url: "http://localhost:5050/api/productList",
+        		   contentType:"application/json",
+        		   success: function(productList){   
+        			   var products =productList;
+        			   var grid=$('#grid').kendoGrid({
+        				   columns:[
+        					   {title: "Title", field: "title", headerAttributes: {"class": "table-header-cell k-text-center", style: "font-weight: bold;"}}, 
+        					   {title: "Description",field: "description", headerAttributes: {"class": "table-header-cell k-text-center", style: "font-weight: bold;"}}, 
+        					   {title: "Price",field: "price", headerAttributes: {"class": "table-header-cell k-text-center", style: "font-weight: bold;"}}, 
+        					   {title: "Category",field: "category", editor: dropdownFunction, headerAttributes: {"class": "table-header-cell k-text-center", style: "font-weight: bold;"}}, 
+        					   {title: "Actions", command: ["edit","destroy"], headerAttributes: {"class": "table-header-cell k-text-center", style: "font-weight: bold;"}}],
+        				   schema: {
+        					   model: {
+        						   fields: {
+        							   "title": { type: 'string',validation: {required: true} },
+        							   "description": { type: 'string', validation: {required: true}},
+        							   "price": { type: 'number',validation: {required: true} },
+        							    "category": {type: 'string'},
+        							   }
+        					   }
+        				   },
+        				   
+        				   dataSource:{
+        					   data:products,
+        					   },
+        					   editable: "popup",
+        					   edit: function (e) {
+        			                var editWindow = this.editable.element.data("kendoWindow");
+        			               // editWindow.unbind("close");
+        			                editWindow.bind("close", onWindowEditClose);
+        			            },
+        			            save: function (e) {
+        			                preventCloseOnSave = false;
+        			            },
+        					   toolbar:["create"],
+        					   
+        					   remove: function(e) {
+        						   console.log("Removing", e.model);
+        						   $.ajax({
+        							   type: "DELETE",
+        							   url: "http://localhost:5050/api/product/delete/" + e.model.id,
+        							   success: function(){
+        								   alert("Record successfully deleted");
+        								   location.reload(true);
+        								   },
+        							   error: function() {
+        								   alert("Error deleting record");
+        								   location.reload(true);
+        								   }
+        								   });
+        						   },
+        				        save: function(e) {
+        						    console.log(e);
+        						    var data = e.model;
+        						    console.log(data);
+        						    var postdata={};
+        						    postdata.id=data.id;
+        						    postdata.title=data.title;
+        						    postdata.description=data.description;
+        						    postdata.price=data.price;
+        						    postdata.category=data.category.CategoryName;
+                        
+        						    $.ajax({
+        						        type:"PUT",
+        						        contentType:'application/json',
+        						        url: "http://localhost:5050/api/product/save",
+        						        data : JSON.stringify(postdata),
+        						        dataType: "json",
+        						        success: function(data){
+        						            console.log("Put Request Called");
+        						            console.log(data);
+        						            //location.reload(true);
+        						            },
+        						        error: function(){
+        						            console.log("Error updating the Product");
+        						            location.reload(true);
+        						            }
+        						            });
+                       
+        						},
+        						  height:400,
+        						  scrollable: true,
+        						  pageable:true,
+        						  }).data("kendoGrid");
+             
+        			   },
+        			   error:function(error){
+        				   console.log(error);
+        				   alert("error loading products");
+        				   }
+        			   });
+             
+        	   });
+        function toggleFunction() {
+            var x = document.getElementById("grid");
+            if (x.style.display === "none") {
+              x.style.display = "block";
+              document.getElementById("buttonToggleRecords").value="Hide Products";
+              
+            } else {
+              x.style.display = "none";
+              document.getElementById("buttonToggleRecords").value="Show Products";
+            }
+          }
+        
+        function dropdownFunction(container, options) {
+            $('<input name="' + options.field + '"/>')
+                .appendTo(container)
+                .kendoDropDownList({
+                        dataTextField: "CategoryName",
+                        dataValueField: "CategoryID",
+                    dataSource: [ {"CategoryID" : 1, "CategoryName" : "Sports/Fitness"},{"CategoryID" : 2, "CategoryName" : "Clothing/Fashion"},{"CategoryID" : 3, "CategoryName" : "Home/Kitchen"},{"CategoryID" : 4, "CategoryName" : "Mobiles/Electronics"},{"CategoryID" : 5, "CategoryName" : "Health/Grocery"},]  
+                });
+        }
+        var onWindowEditClose = function (e) {
+            if (preventCloseOnSave) {
+                e.preventDefault();
+                preventCloseOnSave = false;
+            }
+        };
+  </script>
+</body>
+</html>

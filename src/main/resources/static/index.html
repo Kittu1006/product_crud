@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title></title>
+        <link rel="stylesheet" href="https://kendo.cdn.telerik.com/2021.3.1207/styles/kendo.common.min.css" />
+        <link rel="stylesheet" href="https://kendo.cdn.telerik.com/2021.3.1207/styles/kendo.blueopal.min.css" />
+        <script src="https://kendo.cdn.telerik.com/2021.3.1207/js/jquery.min.js"></script>  
+        <script src="https://kendo.cdn.telerik.com/2021.3.1109/js/jquery.min.js"></script>
+        <script src="https://kendo.cdn.telerik.com/2021.3.1109/js/kendo.web.min.js"></script>
+        <script src="https://kendo.cdn.telerik.com/2021.3.1109/js/kendo.all.min.js"></script>
+        <style>
+        .container{
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+            background-color: cyan;
+          }
+         .button{
+            padding: 10px;
+            margin: 20px;
+            font-size: 25px;
+         }
+        </style>
+        
+    </head>
+    <body>
+        <div class="container" >
+            <button id="buttonAddProduct" onclick="window.location.href='addProduct.html'" class="button">Add Product</button>
+            <button id="buttonLoadProducts" onclick="window.location.href='productRecords.html' " class="button">Product Records</button> 
+        </div>
+     <script>
+     $(function(){
+    	 $("button").kendoButton().css("background-color","blue");
+     });
+     </script>
+</body>
+</html>
