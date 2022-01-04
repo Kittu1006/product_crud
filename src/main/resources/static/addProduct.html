@@ -29,8 +29,9 @@
         <br>    
         <div id="grid"></div>
         <script>
+        var preventCloseOnSave = false;
         $(document).ready(function(){
-        	var preventCloseOnSave = false;
+        	
         	  $("#buttonToggleRecords").kendoButton();
         	  
         	   $.ajax({ 
@@ -48,7 +49,9 @@
         					   {title: "Actions", command: ["edit","destroy"], headerAttributes: {"class": "table-header-cell k-text-center", style: "font-weight: bold;"}}],
         				   schema: {
         					   model: {
+        						   id:"id",
         						   fields: {
+        							   "id":{type: 'number', editable: false, nullable: true},
         							   "title": { type: 'string',validation: {required: true} },
         							   "description": { type: 'string', validation: {required: true}},
         							   "price": { type: 'number',validation: {required: true} },
@@ -58,17 +61,17 @@
         				   },
         				   
         				   dataSource:{
-        					   data:products,
-        					   },
+        					   data: products,
+        					   batch: true,
+        				   },
         					   editable: "popup",
         					   edit: function (e) {
+        						  
         			                var editWindow = this.editable.element.data("kendoWindow");
         			               // editWindow.unbind("close");
         			                editWindow.bind("close", onWindowEditClose);
         			            },
-        			            save: function (e) {
-        			                preventCloseOnSave = false;
-        			            },
+        			            
         					   toolbar:["create"],
         					   
         					   remove: function(e) {
@@ -78,15 +81,16 @@
         							   url: "http://localhost:5050/api/product/delete/" + e.model.id,
         							   success: function(){
         								   alert("Record successfully deleted");
-        								   location.reload(true);
+        								   //location.reload(true);
         								   },
         							   error: function() {
         								   alert("Error deleting record");
-        								   location.reload(true);
+        								   //location.reload(true);
         								   }
         								   });
         						   },
-        				        save: function(e) {
+        				        
+        				            save: function(e) {
         						    console.log(e);
         						    var data = e.model;
         						    console.log(data);
@@ -95,7 +99,7 @@
         						    postdata.title=data.title;
         						    postdata.description=data.description;
         						    postdata.price=data.price;
-        						    postdata.category=data.category.CategoryName;
+        						    postdata.category=data.category;
                         
         						    $.ajax({
         						        type:"PUT",
@@ -103,18 +107,25 @@
         						        url: "http://localhost:5050/api/product/save",
         						        data : JSON.stringify(postdata),
         						        dataType: "json",
-        						        success: function(data){
+        						        success: function(response){
         						            console.log("Put Request Called");
         						            console.log(data);
+        						            $("#grid").data("kendoGrid").refresh();
+        						            preventCloseOnSave = false;
+        						            
+        						            
         						            //location.reload(true);
         						            },
-        						        error: function(){
+        						            error: function(){
         						            console.log("Error updating the Product");
-        						            location.reload(true);
+        						            $("#grid").data("kendoGrid").refresh();
+        						            preventCloseOnSave = false;
+        						            //location.reload(true);
         						            }
         						            });
                        
-        						},
+        						    },
+        						
         						  height:400,
         						  scrollable: true,
         						  pageable:true,
@@ -143,10 +154,8 @@
         function dropdownFunction(container, options) {
             $('<input name="' + options.field + '"/>')
                 .appendTo(container)
-                .kendoDropDownList({
-                        dataTextField: "CategoryName",
-                        dataValueField: "CategoryID",
-                    dataSource: [ {"CategoryID" : 1, "CategoryName" : "Sports/Fitness"},{"CategoryID" : 2, "CategoryName" : "Clothing/Fashion"},{"CategoryID" : 3, "CategoryName" : "Home/Kitchen"},{"CategoryID" : 4, "CategoryName" : "Mobiles/Electronics"},{"CategoryID" : 5, "CategoryName" : "Health/Grocery"},]  
+                .kendoDropDownList({    
+                    dataSource: ["Sports/Fitness","Clothing/Fashion","Home/Kitchen","Mobiles/Electronics","Health/Grocery"]  
                 });
         }
         var onWindowEditClose = function (e) {
@@ -155,6 +164,9 @@
                 preventCloseOnSave = false;
             }
         };
+        $(".k-grid-cancel").on("mousedown", function (e) {
+            preventCloseOnSave = false;
+        });
   </script>
 </body>
 </html>
